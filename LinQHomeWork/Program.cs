@@ -25,21 +25,50 @@ namespace OOPExamples
             //   Игорь Сердюк 
             //   Николай Басков
 
+            var bankWithMostTransactions = banks
+                .Where(x => x.Transactions.ToList().Count == banks.Max(y => y.Transactions.ToList().Count)).First();
 
+            var bankAndUsers = users.Where(x => x.Bank == bankWithMostTransactions)
+                .Aggregate($"{bankWithMostTransactions.Name}\n***************", (x, y) =>
+                {
+                    return x +"\n" + y.FirstName + " " + y.LastName +" " + y.Transactions.Where(z=>z.Currency == Currency.UAH).ToList().Count;
+                });
+
+            Console.WriteLine(bankAndUsers);
 
             //4) Сделать выборку всех Пользователей типа Admin, у которых счет в банке, в котором больше всего транзакций
 
             var admins = users
                 .Where(x => x.Type == UserType.Admin)
-                .Where(x => x.Bank == banks
-                .OrderByDescending(y => y.Transactions.Count).ToArray()[0]);
+                .Where(x => x.Bank == bankWithMostTransactions);
 
 
             //5) Найти Пользователей(НЕ АДМИНОВ), которые произвели больше всего транзакций в определенной из валют (UAH,USD,EUR) 
             //то есть найти трёх пользователей: 1й который произвел больше всего транзакций в гривне, второй пользователь, который произвел больше всего транзакций в USD 
             //и третьего в EUR
 
+            var userUAH = users
+                .Where(x => x.Type != UserType.Admin)
+                .FirstOrDefault(x => x.Transactions.Where(y => y.Currency == Currency.UAH).ToList().Count == users.Max(z => z.Transactions.Where(y => y.Currency == Currency.UAH).ToList().Count));
+
+            var userUSD = users
+                .Where(x => x.Type != UserType.Admin)
+                .FirstOrDefault(x => x.Transactions.Where(y => y.Currency == Currency.USD).ToList().Count == users.Max(z => z.Transactions.Where(y => y.Currency == Currency.USD).ToList().Count));
+
+            var userEUR = users
+                .Where(x => x.Type != UserType.Admin)
+                .FirstOrDefault(x => x.Transactions.Where(y => y.Currency == Currency.EUR).ToList().Count == users.Max(z => z.Transactions.Where(y => y.Currency == Currency.EUR).ToList().Count));
+
+
             //6) Сделать выборку транзакций банка, у которого больше всего Pemium пользователей
+
+            var transactionPool = users
+                .Where(z => z.Type == UserType.Pemium)
+                .Select(z => z.Bank)
+                .GroupBy(x => x)
+                .OrderByDescending(x => x.Count())
+                .Select(x => x.Key).First().Transactions;
+
 
         }
 
