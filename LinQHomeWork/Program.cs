@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace OOPExamples
 {
@@ -25,23 +26,23 @@ namespace OOPExamples
             //   Игорь Сердюк 
             //   Николай Басков
 
-            var bankWithMostTransactions = banks
-                .Where(x => x.Transactions.ToList().Count == banks.Max(y => y.Transactions.ToList().Count)).First();
-
-            var bankAndUsers = users.Where(x => x.Bank == bankWithMostTransactions)
-                .Aggregate($"{bankWithMostTransactions.Name}\n***************", (x, y) =>
+            foreach (var bank in banks)
+                Console.WriteLine(users.OrderByDescending(x => x.LastName)
+                .Aggregate($"{bank.Name}\n***************", (x, y) =>
                 {
-                    return x +"\n" + y.FirstName + " " + y.LastName +" " + y.Transactions.Where(z=>z.Currency == Currency.UAH).ToList().Count;
-                });
-
-            Console.WriteLine(bankAndUsers);
+                    return x + "\n" + y.FirstName + " " + y.LastName + " " + y.Transactions.Count(z => z.Currency == Currency.UAH);
+                }));
 
             //4) Сделать выборку всех Пользователей типа Admin, у которых счет в банке, в котором больше всего транзакций
+
+            var bankWithMostTransactions = banks
+                .OrderBy(x => x.Transactions.ToList().Count)
+                .ThenBy(x => x.Name)
+                .FirstOrDefault();
 
             var admins = users
                 .Where(x => x.Type == UserType.Admin)
                 .Where(x => x.Bank == bankWithMostTransactions);
-
 
             //5) Найти Пользователей(НЕ АДМИНОВ), которые произвели больше всего транзакций в определенной из валют (UAH,USD,EUR) 
             //то есть найти трёх пользователей: 1й который произвел больше всего транзакций в гривне, второй пользователь, который произвел больше всего транзакций в USD 
@@ -70,6 +71,9 @@ namespace OOPExamples
                 .Select(x => x.Key).First().Transactions;
 
 
+            var thePoorest = users
+                .OrderBy(x => x.Transactions.Sum(y => y.Value)).Take(4).Select(x => new {x, TransactionsValue = x.Transactions.Sum(y => y.Value) }).ToList();
+
         }
 
         public class User
@@ -92,7 +96,7 @@ namespace OOPExamples
         public static List<Transaction> GetTenTransactions()
         {
             var result = new List<Transaction>();
-            var sign = random.Next(0, 1);
+            var sign = random.Next(0, 2);
             var signValue = sign == 0 ? -1 : 1;
             for (var i = 0; i < 10; i++)
             {
